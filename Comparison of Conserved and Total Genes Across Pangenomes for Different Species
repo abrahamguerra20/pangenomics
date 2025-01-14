@@ -1,0 +1,39 @@
+library(ggplot2)
+
+# List of species and their corresponding files
+species = c("all", "G1", "G2")  # Use standardized species names
+files_conserved = c("number_of_conserved_genes_1.Rtab", "number_of_conserved_genes_2.Rtab", "number_of_conserved_genes_3.Rtab")  # Standardized file names for conserved genes
+files_total = c("number_of_genes_in_pan_genome_1.Rtab", "number_of_genes_in_pan_genome_2.Rtab", "number_of_genes_in_pan_genome_3.Rtab")  # Standardized file names for total genes
+
+# Read data and combine into a dataframe
+combined_data = data.frame()
+
+for (i in 1:length(species)) {
+    conserved = colMeans(read.table(files_conserved[i]))
+    total = colMeans(read.table(files_total[i]))
+
+    species_data = data.frame(
+        Genes = c(conserved, total),
+        Genomes = c(1:length(conserved), 1:length(total)),
+        Type = c(rep("Conserved Genes", length(conserved)), rep("Total Genes", length(total))),
+        Species = rep(species[i], 2 * length(conserved))
+    )
+
+    combined_data = rbind(combined_data, species_data)
+}
+
+# Create the plot
+p <- ggplot(data = combined_data, aes(x = Genomes, y = Genes, color = Type)) +
+    geom_line(aes(linetype = Species)) +
+    scale_linetype_manual(values = c("solid", "dotted", "dashed")) +
+    theme_classic() +
+    xlab("Number of Genomes") +
+    ylab("Number of Genes") +
+    theme_bw(base_size = 16) +
+    theme(legend.position = "right")
+
+# Save the plot in PNG format
+ggsave(filename = "pangenome_comparison.png", plot = p, width = 10, height = 10)
+
+# Save the plot in SVG format
+ggsave(filename = "pangenome_comparison.svg", plot = p, width = 10, height = 10)
