@@ -1,0 +1,66 @@
+# Install required packages if they are not installed
+if (!require("ape")) install.packages("ape")
+if (!require("phytools")) install.packages("phytools")
+if (!require("dendextend")) install.packages("dendextend")
+if (!require("phylogram")) install.packages("phylogram")
+if (!require("viridis")) install.packages("viridis")
+if (!require("dplyr")) install.packages("dplyr")
+
+# Load necessary libraries
+library(ape)
+library(phytools)
+library(dendextend)
+library(viridis)
+library(dplyr)
+library(phylogram)
+
+# Read phylogenetic trees from Newick files (replace with actual file paths)
+tree1 <- read.tree("tree1.txt")  # Standard name for the first tree file
+tree2 <- read.tree("tree2.txt")  # Standard name for the second tree file
+
+# Define outgroup as a vector of species names (replace with actual outgroup species)
+outgroup <- c("Species_1", "Species_2", "Species_3", "Species_4", "Species_5")
+
+# Root trees using the specified outgroup
+tree1 <- root(tree1, outgroup = outgroup, resolve.root = TRUE)
+tree2 <- root(tree2, outgroup = outgroup, resolve.root = TRUE)
+
+# Compute branch lengths if needed (optional but can help with tree visualization)
+tree1 <- compute.brlen(tree1)
+tree2 <- compute.brlen(tree2)
+
+# Convert the trees to dendrograms for visualization
+tree1_dendro <- as.dendrogram(tree1)
+tree2_dendro <- as.dendrogram(tree2)
+
+# Find the most recent common ancestor (MRCA) of the outgroup for both trees
+mrca1 <- getMRCA(tree1, outgroup)
+mrca2 <- getMRCA(tree2, outgroup)
+
+# Rotate trees to place the outgroup at the bottom
+tree1 <- rotate(tree1, mrca1)
+tree2 <- rotate(tree2, mrca2)
+
+# Create a list of dendrograms for the tanglegram
+dndlist <- dendextend::dendlist(tree1_dendro, tree2_dendro)
+
+# Open a new graphics device with adjusted dimensions for better visualization
+dev.new(width = 10, height = 12)  # Adjust the window size for better visualization
+
+# Generate the tanglegram with custom parameters
+dendextend::tanglegram(
+  dndlist,
+  fast = TRUE, 
+  margin_inner = 2.0,               # Adjust inner margin: distance between genomes and connecting lines
+  lab.cex = 0.1,                    # Label size for genome names
+  lwd = 0.2,                        # Line thickness for connecting lines
+  edge.lwd = 0.3,                   # Line thickness for tree branches
+  type = "r",                       # Type of tanglegram "rectangular"
+  highlight_distinct_edges = TRUE,   # Highlight differences between the trees
+  common_subtrees_color_branches = TRUE, # Color branches of common subtrees
+  color_lines = "black",             # Use a single color for connecting lines
+)
+
+# Save the tanglegram as a PDF with adjusted size
+dev.copy(pdf, 'Tanglegram_v3.pdf', width = 10, height = 12)
+dev.off()
